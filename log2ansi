@@ -10,7 +10,7 @@ use vars qw(%ansi %base %attr %old);
 use vars qw(@bols @nums @mirc @irssi @mc @mh @ic @ih);
 
 use vars qw{$VERSION %IRSSI};
-($VERSION) = '$Revision: 1.4 $' =~ / (\d+\.\d+) /;
+($VERSION) = '$Revision: 1.5 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'log2ansi',
           authors     => 'Peder Stray',
@@ -45,17 +45,21 @@ my($n) = 0;
 @ih = map {$_ eq uc $_} @irssi;
 
 sub defc {
-    $attr{fgc} = $attr{bgc} = -1;
-    $attr{fgh} = $attr{bgh} = 0;
+    my($attr) = shift || \%attr;
+    $attr->{fgc} = $attr->{bgc} = -1;
+    $attr->{fgh} = $attr->{bgh} = 0;
 }
 
 sub defm {
-    $attr{bold} = $attr{underline} = $attr{blink} = $attr{reverse} = 0;
+    my($attr) = shift || \%attr;
+    $attr->{bold} = $attr->{underline} =
+      $attr->{blink} = $attr->{reverse} = 0;
 }
 
 sub def {
-    defc;
-    defm;
+    my($attr) = shift || \%attr;
+    defc($attr);
+    defm($attr);
 }
 
 sub setold {
@@ -89,7 +93,11 @@ sub emit {
 
 #    print " attr: @elem\n";
 
-    printf "\e[%sm", join ";", @elem if @elem;
+    if (@elem) {
+	@elem = () if @elem == 1 && !$elem[0];
+	printf "\e[%sm", join ";", @elem;
+    }
+
     print $str;
 
     setold;
@@ -178,14 +186,55 @@ while (<>) {
 	} elsif (s/^\cV//) {
 	    $attr{reverse} = !$attr{reverse};
 
+	} elsif (s/^\c[\[([^m]*)m//) {
+	    my(@ansi) = split ";", $1;
+	    my(%a);
+
+	    push @ansi, 0 unless @ansi;
+
+	    for my $code (@ansi) {
+		if ($code == 0) {
+		    def(\%a);
+		} elsif ($code == $base{bold}) {
+		    $a{bold} = 1;
+		} elsif ($code == $base{underline}) {
+		    $a{underline} = 1;
+		} elsif ($code == $base{blink}) {
+		    $a{underline} = 1;
+		} elsif ($code == $base{reverse}) {
+		    $a{reverse} = 1;
+		} elsif ($code => 30 && $code <= 37) {
+		    $a{fgc} = $code - 30;
+		} elsif ($code => 40 && $code <= 47) {
+		    $a{bgc} = $code - 40;
+		} else {
+		    $a{$code} = 1;
+		}
+	    }
+
+	    if ($a{fgc} >= 0 && $a{bold}) {
+		$a{fgh} = 1;
+		$a{bold} = 0;
+	    }
+
+	    if ($a{bgc} >= 0 && $a{blink}) {
+		$a{bgh} = 1;
+		$a{blink} = 0;
+	    }
+
+	    for my $key (keys %a) {
+		$attr{$key} = $a{$key};
+	    }
+
 	} elsif (s/^\c_//) {
 	    $attr{underline} = !$attr{underline};
 
 	} else {
-	    s/^([^\cB\cC\cD\cF\cO\cV\c_]+)//;
+	    s/^(.[^\cB\cC\cD\cF\cO\cV\c[\c_]*)//;
 	    emit $1;
 	}
     }
+
     def;
     emit "\n";
 }
