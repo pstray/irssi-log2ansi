@@ -6,11 +6,12 @@
 #    irssi, it will complain if you try to...
 
 use strict;
+use Getopt::Long;
 use vars qw(%ansi %base %attr %old);
 use vars qw(@bols @nums @mirc @irssi @mc @mh @ic @ih);
 
 use vars qw{$VERSION %IRSSI};
-($VERSION) = '$Revision: 1.7 $' =~ / (\d+\.\d+) /;
+($VERSION) = '$Revision: 1.8 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'log2ansi',
           authors     => 'Peder Stray',
@@ -25,6 +26,12 @@ if (__PACKAGE__ =~ /^Irssi/) {
     Irssi::print("%RWarning:%n log2ansi is should not run from within irssi");
     die "Suicide to prevent loading\n";
 }
+
+my $clear = 0;
+
+GetOptions(
+	   '--clear!' => \$clear,
+	  );
 
 my($n) = 0;
 %ansi = map { $_ => $n++ } split //, 'krgybmcw';
@@ -90,7 +97,8 @@ sub emit {
 
     if (@elem) {
 	@elem = () if @elem == 1 && !$elem[0];
-	printf "\e[%sm", join ";", @elem;
+	printf "\e[%sm", join ";", @elem
+	  unless $clear;
     }
 
     print $str;
