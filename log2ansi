@@ -10,7 +10,7 @@ use vars qw(%ansi %base %attr %old);
 use vars qw(@bols @nums @mirc @irssi @mc @mh @ic @ih);
 
 use vars qw{$VERSION %IRSSI};
-($VERSION) = '$Revision: 1.5 $' =~ / (\d+\.\d+) /;
+($VERSION) = '$Revision: 1.7 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'log2ansi',
           authors     => 'Peder Stray',
@@ -76,22 +76,17 @@ sub emit {
 
     $elem{0}++ if @clear;
 
-#    print "\n";
     for (@bols) {
-#	printf " %-9s [%2d] [%2d] [%2d]\n", $_, $base{$_}, $old{$_}, $attr{$_};
 	$elem{$base{$_}}++
 	  if $attr{$_} && ($old{$_} != $attr{$_} || $elem{0});
     }
 
     for (@nums) {
-#	printf " %-9s [%2d] [%2d] [%2d]\n", $_, $base{$_}, $old{$_}, $attr{$_};
 	$elem{$base{$_}+$attr{$_}}++
 	  if $attr{$_} >= 0 && ($old{$_} != $attr{$_} || $elem{0});
     }
 
     @elem = sort {$a<=>$b} keys %elem;
-
-#    print " attr: @elem\n";
 
     if (@elem) {
 	@elem = () if @elem == 1 && !$elem[0];
