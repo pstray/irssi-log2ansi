@@ -1,0 +1,167 @@
+#! /usr/bin/perl
+#
+# Copyright (C) 2002 by Peder Stray <peder@ninja.no>
+#
+
+%ansi = map { $_ => $n++ } split //, 'krgybmcw';
+
+@bols = qw(bold underline blink reverse fgh bgh);
+@nums = qw(fgc bgc);
+
+@base{@bols} = qw(1 4 5 7 1 5);
+@base{@nums} = qw(30 40);
+
+@mirc  = split //, 'WkbgRrmyYGcCBMKw';
+@irssi = split //, 'kbgcrmywKBGCRMYW';
+
+@mc = map {$ansi{lc $_}} @mirc;
+@mh = map {$_ eq uc $_} @mirc;
+
+@ic = map {$ansi{lc $_}} @irssi;
+@ih = map {$_ eq uc $_} @irssi;
+
+sub defc {
+    $attr{fgc} = $attr{bgc} = -1;
+    $attr{fgh} = $attr{bgh} = 0;
+}
+
+sub defm {
+    $attr{bold} = $attr{underline} = $attr{blink} = $attr{reverse} = 0;
+}
+
+sub def {
+    defc;
+    defm;
+}
+
+sub setold {
+    %old = %attr;
+}
+
+sub emit {
+    my($str) = @_;
+    my(%elem,@elem);
+
+    my(@clear) = ( (grep { $old{$_} > $attr{$_} } @bols),
+		   (grep { $old{$_}>=0 && $attr{$_}<0 } @nums)
+		 );
+
+    $elem{0}++ if @clear;
+
+#    print "\n";
+    for (@bols) {
+#	printf " %-9s [%2d] [%2d] [%2d]\n", $_, $base{$_}, $old{$_}, $attr{$_};
+	$elem{$base{$_}}++
+	  if $attr{$_} && ($old{$_} != $attr{$_} || $elem{0});
+    }
+
+    for (@nums) {
+#	printf " %-9s [%2d] [%2d] [%2d]\n", $_, $base{$_}, $old{$_}, $attr{$_};
+	$elem{$base{$_}+$attr{$_}}++
+	  if $attr{$_} >= 0 && ($old{$_} != $attr{$_} || $elem{0});
+    }
+
+    @elem = sort {$a<=>$b} keys %elem;
+
+#    print " attr: @elem\n";
+
+    printf "\e[%sm", join ";", @elem if @elem;
+    print $str;
+
+    setold;
+}
+
+while (<>) {
+    chomp;
+    def;
+    setold;
+
+    while (length) {
+	if (s/^\cB//) {
+	    # toggle bold
+	    $attr{bold} = !$attr{bold};
+
+	} elsif (s/^\cC//) {
+	    # mirc colors
+
+	    if (/^[^\d,]/) {
+		defc;
+	    } else {
+
+		if (s/^(\d\d?)//) {
+		    $attr{fgc} = $mc[$1 % 16];
+		    $attr{fgh} = $mh[$1 % 16];
+		}
+
+		if (s/^,//) {
+		    if (s/^(\d\d?)//) {
+			$attr{bgc} = $mc[$1 % 16];
+			$attr{bgh} = $mh[$1 % 16];
+		    } else {
+			$attr{bgc} = -1;
+			$attr{bgh} = 0;
+		    }
+		}
+	    }
+
+	} elsif (s/^\cD//) {
+	    # irssi format
+
+	    if (s/^a//) {
+		$attr{blink} = !$attr{blink};
+	    } elsif (s/^b//) {
+		$attr{underline} = !$attr{underline};
+	    } elsif (s/^c//) {
+		$attr{bold} = !$attr{bold};
+	    } elsif (s/^d//) {
+		$attr{reverse} = !$attr{reverse};
+	    } elsif (s/^e//) {
+		# indent
+	    } elsif (s/^f([^,]*),//) {
+		# indent_func
+	    } elsif (s/^g//) {
+		def;
+	    } elsif (s/^h//) {
+		# cleol
+	    } elsif (s/^i//) {
+		# monospace
+	    } else {
+		s/^(.)(.)//;
+		($f,$b) = map { ord($_)-ord('0') } $1, $2;
+		if ($f<0) {
+#		    $attr{fgc} = -1; $attr{fgh} = 0;
+		} else {
+		    # c>7 => bold, c -= 8 if c>8
+		    $attr{fgc} = $ic[$f];
+		    $attr{fgh} = $ih[$f];
+		}
+		if ($b<0) {
+#		    $attr{bgc} = -1; $attr{bgh} = 0;
+		} else {
+		    # c>7 => blink, c -= 8
+		    $attr{bgc} = $ic[$b];
+		    $attr{bgh} = $ih[$b];
+		}
+	    }
+
+	} elsif (s/^\cF//) {
+	    # blink
+	    $attr{blink} = !$attr{blink};
+
+	} elsif (s/^\cO//) {
+	    def;
+
+	} elsif (s/^\cV//) {
+	    $attr{reverse} = !$attr{reverse};
+
+	} elsif (s/^\c_//) {
+	    $attr{underline} = !$attr{underline};
+
+	} else {
+	    s/^([^\cB\cC\cD\cF\cO\cV\c_]+)//;
+	    emit $1;
+	}
+    }
+    def;
+    emit "\n";
+}
