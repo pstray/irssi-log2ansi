@@ -11,7 +11,7 @@ use vars qw(%ansi %base %attr %old);
 use vars qw(@bols @nums @mirc @irssi @mc @mh @ic @ih);
 
 use vars qw{$VERSION %IRSSI};
-($VERSION) = '$Revision: 1.8 $' =~ / (\d+\.\d+) /;
+($VERSION) = '$Revision: 1.9 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'log2ansi',
           authors     => 'Peder Stray',
@@ -32,6 +32,14 @@ my $clear = 0;
 GetOptions(
 	   '--clear!' => \$clear,
 	  );
+
+for (@ARGV) {
+    if (/\.bz2$/) {
+	$_ = "bunzip2 < '$_' |";
+    } elsif (/\.gz$/) {
+	$_ = "gunzip < '$_' |";
+    }
+}
 
 my($n) = 0;
 %ansi = map { $_ => $n++ } split //, 'krgybmcw';
