@@ -2,13 +2,15 @@
 #
 # Copyright (C) 2002 by Peder Stray <peder@ninja.no>
 #
+#    This is a standalone perl program and not intended to run within
+#    irssi, it will complain if you try to...
 
 use strict;
 use vars qw(%ansi %base %attr %old);
 use vars qw(@bols @nums @mirc @irssi @mc @mh @ic @ih);
 
 use vars qw{$VERSION %IRSSI};
-($VERSION) = '$Revision: 1.3 $' =~ / (\d+\.\d+) /;
+($VERSION) = '$Revision: 1.4 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
           name        => 'log2ansi',
           authors     => 'Peder Stray',
@@ -18,6 +20,11 @@ use vars qw{$VERSION %IRSSI};
           description => 'convert mirc color and irssi interal formatting to ansi colors, useful for log filtering',
          );
 
+if (__PACKAGE__ =~ /^Irssi/) {
+    # we are within irssi... die!
+    Irssi::print("%RWarning:%n log2ansi is should not run from within irssi");
+    die "Suicide to prevent loading\n";
+}
 
 my($n) = 0;
 %ansi = map { $_ => $n++ } split //, 'krgybmcw';
