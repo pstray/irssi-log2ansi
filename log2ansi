@@ -16,13 +16,13 @@ use vars qw($class $oldclass);
 use vars qw{$VERSION %IRSSI};
 ($VERSION) = '$Revision: 1.10 $' =~ / (\d+\.\d+) /;
 %IRSSI = (
-          name        => 'log2ansi',
-          authors     => 'Peder Stray',
-          contact     => 'peder@ninja.no',
-          url         => 'http://ninja.no/irssi/log2ansi',
-          license     => 'GPL',
-          description => 'convert mirc color and irssi interal formatting to ansi colors, useful for log filtering',
-         );
+	  name        => 'log2ansi',
+	  authors     => 'Peder Stray',
+	  contact     => 'peder@ninja.no',
+	  url         => 'http://ninja.no/irssi/log2ansi',
+	  license     => 'GPL',
+	  description => 'convert mirc color and irssi interal formatting to ansi colors, useful for log filtering',
+	 );
 
 if (__PACKAGE__ =~ /^Irssi/) {
     # we are within irssi... die!
