@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #
-# Copyright (C) 2002-2010 by Peder Stray <peder@ninja.no>
+# Copyright (C) 2002-2019 by Peder Stray <peder@ninja.no>
 #
 #    This is a standalone perl program and not intended to run within
 #    irssi, it will complain if you try to...
@@ -41,10 +41,17 @@ GetOptions(
 	  );
 
 for (@ARGV) {
-    if (/\.bz2$/) {
+    if (/\.xz$/) {
+	$_ = "unxz < '$_' |";
+    }
+    elsif (/\.bz2$/) {
 	$_ = "bunzip2 < '$_' |";
-    } elsif (/\.gz$/) {
+    }
+    elsif (/\.gz$/) {
 	$_ = "gunzip < '$_' |";
+    }
+    elsif (/\.lzma$/) {
+	$_ = "unlzma < '$_' |";
     }
 }
 
