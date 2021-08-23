@@ -182,7 +182,7 @@ if ($opt_html) {
 
 if ($opt_utf8) {
     binmode STDIN, ':bytes'; #encoding(cp1252)';
-    binmode STDOUT, ':utf8';
+    binmode STDOUT, ':encoding(UTF-8)';
 }
 
 while (<>) {
