@@ -299,9 +299,9 @@ while (<>) {
 		    $a{underline} = 1;
 		} elsif ($code == $base{reverse}) {
 		    $a{reverse} = 1;
-		} elsif ($code => 30 && $code <= 37) {
+		} elsif ($code >= 30 && $code <= 37) {
 		    $a{fgc} = $code - 30;
-		} elsif ($code => 40 && $code <= 47) {
+		} elsif ($code >= 40 && $code <= 47) {
 		    $a{bgc} = $code - 40;
 		} else {
 		    $a{$code} = 1;
